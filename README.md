@@ -46,6 +46,9 @@ When prompted, enter the directory path you want to scan.
    - Exclusion of common programming patterns (e.g., variable declarations)
 4. Results are printed to the console, showing the file path and potential passwords found.
 
+![image](https://github.com/user-attachments/assets/5a4d6fad-e09b-4a11-990b-7ad52117deaf)
+
+
 ## ⚠️ Disclaimer
 
 This tool is for educational and security auditing purposes only. Always ensure you have the necessary permissions before scanning files or systems. The authors are not responsible for any misuse or damage caused by this script.
