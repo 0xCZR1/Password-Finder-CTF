@@ -6,6 +6,8 @@ from multiprocessing import Pool, cpu_count
 
 #File type filtering
 def is_target_file_type(file_path):
+    if str(file_path).startswith('/var/mail'):
+      return True
     target_extensions = {'.txt', '.config', '.conf', '.env'}
     return file_path.suffix.lower() in target_extensions
 
@@ -52,22 +54,35 @@ def is_text_file(file_path, block_size=512):
         return False
                 
 #Scanning the directories
-def scanRecurse(path):
+def scanRecurse(path, max_depth=20):
+    if max_depth <= 0:
+        return
+
     try:
         with os.scandir(path) as folders:
             for entry in folders:
-                if entry.is_dir():
-                    if 'OneDrive' in entry.path:
-                        continue 
-                    yield from scanRecurse(entry.path)
-                elif entry.is_file() and is_target_file_type(pathlib.Path(entry.path)):
-                    if entry.stat().st_size > 10 * 1024 * 1024:  # Skip files larger than 10 MB
-                        print(f"Skipping large file: {entry.path}")
-                        continue
-                    yield entry.path  
+                try:
+                    if entry.is_symlink():
+                        continue  # Skip symbolic links
+                    if entry.is_dir():
+                        if entry.name in {'proc', 'sys', 'run', 'dev'}:
+                            continue  # Skip problematic system directories
+                        if 'OneDrive' in entry.path:
+                            continue 
+                        yield from scanRecurse(entry.path, max_depth - 1)
+                    elif entry.is_file() and is_target_file_type(pathlib.Path(entry.path)):
+                        if entry.stat().st_size > 10 * 1024 * 1024:  # Skip files larger than 10 MB
+                            print(f"Skipping large file: {entry.path}")
+                            continue
+                        yield entry.path
+                except PermissionError:
+                    print(f"Permission denied: {entry.path}")
+                except OSError as e:
+                    print(f"Error accessing {entry.path}: {e}")
     except PermissionError:
-        pass
-   
+        print(f"Permission denied: {path}")
+    except OSError as e:
+        print(f"Error accessing {path}: {e}")   
 #Reading the files
 # def readFile(file_path):
 #     if not is_text_file(file_path):
@@ -108,6 +123,5 @@ def main(dir_path):
             print(potential_passwords)
 
 if __name__ == "__main__":
-    dir_path = input(f"Please provide the searching directory: ")
+    dir_path = input("Please provide the searching directory: ")
     main(dir_path)
-    
