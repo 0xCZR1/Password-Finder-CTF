@@ -4,11 +4,12 @@ import pathlib
 from multiprocessing import Pool, cpu_count
 
 
+#File type filtering
 def is_target_file_type(file_path):
     target_extensions = {'.txt', '.config', '.conf', '.env'}
     return file_path.suffix.lower() in target_extensions
 
-
+#Password/word filtering based of the below rules
 def finder(string):
     min_length = 8
     max_length = 20
@@ -31,12 +32,13 @@ def finder(string):
         has_upper and
         has_symbols
     )
- 
+
+#Applying the filters on each word
 def password_checker(text):
-    
     words = re.findall(r'\S+', re.sub(r'[,.;:()"\']', ' ', text))
     return [word for word in words if finder(word)]
 
+#Skipping binaries
 def is_text_file(file_path, block_size=512):
     try:
         with open(file_path, 'rb') as f:
@@ -49,7 +51,7 @@ def is_text_file(file_path, block_size=512):
     except Exception:
         return False
                 
-
+#Scanning the directories
 def scanRecurse(path):
     try:
         with os.scandir(path) as folders:
@@ -66,25 +68,25 @@ def scanRecurse(path):
     except PermissionError:
         pass
    
+#Reading the files
+# def readFile(file_path):
+#     if not is_text_file(file_path):
+#         return ""
+#     try:
+#         file = pathlib.Path(file_path)
+#         if file.is_file():
+#             with open(file, 'r', encoding='utf-8', errors='ignore') as text:
+#                 return text.read()
+#     except TypeError:
+#         pass
+#     except PermissionError:
+#         pass
+#     except Exception as e:
+#         print(f"Error reading file {file_path}: {str(e)}")
+#     return ""
 
-def readFile(file_path):
-    if not is_text_file(file_path):
-        return ""
-    try:
-        file = pathlib.Path(file_path)
-        if file.is_file():
-            with open(file, 'r', encoding='utf-8', errors='ignore') as text:
-                return text.read()
-    except TypeError:
-        pass
-    except PermissionError:
-        pass
-    except Exception as e:
-        print(f"Error reading file {file_path}: {str(e)}")
-    return ""
 
 def process_file(file_path):
-    
     try:
         file_path = os.path.normpath(file_path)
         with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
